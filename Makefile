@@ -1,3 +1,4 @@
+#TODO: Generalize it
 CPPFLAGS=-g
 PREFIX=$(HOME)
 

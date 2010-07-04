@@ -1,5 +1,4 @@
-/*
- Copyright (c) 2010 Mats Rauhala <mats.rauhala@gmail.com>
+/* Copyright (c) 2010 Mats Rauhala <mats.rauhala@gmail.com> {{{
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation
@@ -21,10 +20,8 @@
  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-/* 02.02 2009
- * Mats Rauhala
+ }}}*/
+/* 02.02 2009 * Mats Rauhala {{{
  *
  * Battery status bar. Reads battery status information and prints colored
  * unicode triangles representing battery status. In this implementation the
@@ -32,7 +29,12 @@
  *
  * Made in C++ instead of for example python because I wanted more speed
  * (rendered often) and wanted more experience with C++.
- */
+ */ //}}}
+/* 04.07 2010 * Ricardo Costa {{{
+ *
+ * A little hacked for my laptop, nothing major changed.
+ */ //}}}
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -69,9 +71,7 @@ const int BARS = 10;
 inline bool fileExists(string filename)
 {
     struct stat statbuffer;
-    int status;
-    
-    status = stat(filename.c_str(), &statbuffer);
+    int status = stat(filename.c_str(), &statbuffer);
 
     return status==0?true:false;
 }
@@ -95,7 +95,7 @@ inline bool acPower(string filename)
 
 // Get the design capacity and warning capacity
 // Information is retrieved from {BAT0,BAT1}/info
-inline void batteryCapacity(string dir, battery_t &battery)
+inline void batteryCapacity(const string dir, battery_t &battery)
 {
     char *buffer = new char[256];
     string filename(dir + string("/info"));
@@ -121,7 +121,7 @@ inline void batteryCapacity(string dir, battery_t &battery)
 
 // Get the current capacity
 // Information is retrieved from {BAT0,BAT1}/state
-inline void currentCapacity(string dir, battery_t &battery)
+inline void currentCapacity(const string dir, battery_t &battery)
 {
     char *buffer = new char[256];
     string filename(dir + string("/state")), temp;
@@ -171,31 +171,19 @@ inline void formatBars(int capacity, battery_t &battery)
 
 int main(void)
 {
-    string batterydir("");
     battery_t battery = {1, 1, 1}; // Prevent division by zero
     // Check whether we are on AC power and print an upwards arrow to symbolize
     // AC current
-    if(fileExists(AC))
-    {
-        if(acPower(AC))
-            cout << ACSYMBOL;
-        else
-            cout << BATTERYSYMBOL;
-        cout << " ";
-    }
+	// I assume that the file exists
+    if(acPower(AC))
+		cout << ACSYMBOL;
+    else
+		cout << BATTERYSYMBOL;
+		cout << " ";
 
-    // Find the battery (BAT0 or BAT1, I doubt there'd be BAT2)
-    if(fileExists(BAT0))
-        batterydir = BAT0;
-    else if(fileExists(BAT1))
-        batterydir = BAT1;
-    // Seems like we have no batteries, why would you need this then?
-    if(batterydir == string(""))
-        return 0;
-
-    // Fill the battery struct
-    batteryCapacity(batterydir, battery);
-    currentCapacity(batterydir, battery);
+    // Fill the battery struct (BAT1 for my laptop)
+    batteryCapacity(BAT1, battery);
+    currentCapacity(BAT1, battery);
 
     formatBars(green(battery), battery);
 

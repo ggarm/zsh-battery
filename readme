@@ -1,3 +1,4 @@
+#Original author readme
 Battery status bar. Reads battery status information and prints colored
 unicode triangles representing battery status. In this implementation the
 color codes are for zsh.
