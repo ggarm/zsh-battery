@@ -62,8 +62,8 @@ const string GREEN("%{\033[0;32m%}");
 const string YELLOW("%{\033[0;33m%}");
 const string NOCOLOR("%{\033[0;0m%}");
 // Symbols
-const string ACSYMBOL(GREEN + "↑" + NOCOLOR);
-const string BATTERYSYMBOL(RED + "↓" + NOCOLOR);
+const string ACSYMBOL(GREEN + "↑ " + NOCOLOR);
+const string BATTERYSYMBOL(RED + "↓ " + NOCOLOR);
 const string BARSYMBOL("▶");
 const int BARS = 10;
 
@@ -97,10 +97,10 @@ inline bool acPower(string filename)
 // Information is retrieved from {BAT0,BAT1}/info
 inline void batteryCapacity(const string dir, battery_t &battery)
 {
-    char *buffer = new char[256];
     string filename(dir + string("/info"));
     if(!fileExists(filename)) return; // XXX: Better error handling
     ifstream file(filename.c_str());
+    char *buffer = new char[256];
 
     for(;!file.eof(); file.getline(buffer, 256))
     {
@@ -123,10 +123,10 @@ inline void batteryCapacity(const string dir, battery_t &battery)
 // Information is retrieved from {BAT0,BAT1}/state
 inline void currentCapacity(const string dir, battery_t &battery)
 {
-    char *buffer = new char[256];
     string filename(dir + string("/state")), temp;
     if(!fileExists(filename)) return;
     ifstream file(filename.c_str());
+    char *buffer = new char[256];
 
     for(;!file.eof();file.getline(buffer, 256))
     {
@@ -150,7 +150,7 @@ inline int green(battery_t &battery)
 }
 
 // Print the colored bars
-inline void formatBars(int capacity, battery_t &battery)
+inline void formatBars(const int capacity, battery_t &battery)
 {
     // Output colored bars. Output green bars if index is less then the
     // capacity (green = remaining), otherwise output yellow or red bars.
@@ -158,12 +158,12 @@ inline void formatBars(int capacity, battery_t &battery)
     // capacity.
     for(int i = 0; i < BARS; i++)
     {
-        if(i < capacity)
-            cout << GREEN;
-        else if(battery.currentCapacity < battery.warningCapacity)
-            cout << RED;
-        else
-            cout << YELLOW;
+		if(i < capacity)
+			cout << GREEN;
+		else if(battery.currentCapacity < battery.warningCapacity)
+			cout << RED;
+		else
+			cout << YELLOW;
         cout << BARSYMBOL;
     }
     cout << NOCOLOR;
@@ -179,7 +179,6 @@ int main(void)
 		cout << ACSYMBOL;
     else
 		cout << BATTERYSYMBOL;
-		cout << " ";
 
     // Fill the battery struct (BAT1 for my laptop)
     batteryCapacity(BAT1, battery);
