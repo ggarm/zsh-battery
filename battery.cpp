@@ -68,12 +68,10 @@ const string BARSYMBOL("▶");
 const int BARS = 10;
 
 // Check that file exists
-inline bool fileExists(string filename)
+inline int fileExists(string filename)
 {
     struct stat statbuffer;
-    int status = stat(filename.c_str(), &statbuffer);
-
-    return status==0?true:false;
+    return stat(filename.c_str(), &statbuffer);
 }
 
 // Check whether we're on AC-power
