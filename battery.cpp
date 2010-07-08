@@ -43,7 +43,6 @@
 #include <cstring>
 
 using namespace std;
-
 struct BATTERY {
     int designCapacity;
     int warningCapacity;
@@ -53,21 +52,29 @@ struct BATTERY {
 typedef struct BATTERY battery_t;
 
 // File locations
-const string BAT0("/proc/acpi/battery/BAT0");
-const string BAT1("/proc/acpi/battery/BAT1");
+const string BAT1_INFO("/proc/acpi/battery/BAT1/info");
+const string BAT1_STATE("/proc/acpi/battery/BAT1/state");
 const string AC("/proc/acpi/ac_adapter/ACAD/state");
 // Colors
 const string RED("%{\033[0;31m%}");
-const string GREEN("%{\033[0;32m%}");
+const string GREEN("%{\033[1;32m%}");
 const string YELLOW("%{\033[0;33m%}");
-const string NOCOLOR("%{\033[0;0m%}");
+const string NOCOLOR("%{\033[0m%}");
+//const string NOCOLOR("%{\033[0;0m%}");
 // Symbols
-const string ACSYMBOL(GREEN + "↑ " + NOCOLOR);
-const string BATTERYSYMBOL(RED + "↓ " + NOCOLOR);
+const string ACSYMBOL(GREEN + "ϟ ");
+const string BATTERYSYMBOL(RED + "↓ ");
+//const string ACSYMBOL(GREEN + "↑ " + NOCOLOR);
+//const string BATTERYSYMBOL(RED + "↓ " + NOCOLOR);
+//const string BARSYMBOL("▮");
 const string BARSYMBOL("▶");
+const string FULLBAR("▶▶▶▶▶▶▶▶▶▶");
 const int BARS = 10;
 
 // Check that file exists
+// R: I don't understand but this little function is a time-saver
+//  Must investigate later...
+//   STAT returns 0 on SUCESS!!! <--
 inline int fileExists(string filename)
 {
     struct stat statbuffer;
@@ -75,29 +82,43 @@ inline int fileExists(string filename)
 }
 
 // Check whether we're on AC-power
-inline bool acPower(string filename)
+inline void acPower(const string filename)
 {
-    string state;
-    ifstream file(filename.c_str());
+	string state;
+	ifstream file(filename.c_str());
 
-    file >> state;
-    file >> state;
+	file >> state;
+	file >> state;
 
-    file.close();
+	file.close();
 
-    if(state == string("off-line"))
-        return false;
-    else
-        return true;
+	if(state == string("off-line"))
+		cout << BATTERYSYMBOL;
+	else
+		cout << ACSYMBOL;
+}
+
+inline bool withBat(const string filename)
+{
+	string state;
+	ifstream file(filename.c_str());
+
+	file >> state;
+	file >> state;
+
+	file.close();
+
+	if(state == string("no"))
+		return false;
+	else return true;
 }
 
 // Get the design capacity and warning capacity
 // Information is retrieved from {BAT0,BAT1}/info
-inline void batteryCapacity(const string dir, battery_t &battery)
+inline void batteryCapacity(const string filename, battery_t &battery)
 {
-    string filename(dir + string("/info"));
     if(!fileExists(filename)) return; // XXX: Better error handling
-    ifstream file(filename.c_str());
+	ifstream file(filename.c_str());
     char *buffer = new char[256];
 
     for(;!file.eof(); file.getline(buffer, 256))
@@ -119,11 +140,10 @@ inline void batteryCapacity(const string dir, battery_t &battery)
 
 // Get the current capacity
 // Information is retrieved from {BAT0,BAT1}/state
-inline void currentCapacity(const string dir, battery_t &battery)
+inline void currentCapacity(const string filename, battery_t &battery)
 {
-    string filename(dir + string("/state")), temp;
-    if(!fileExists(filename)) return;
-    ifstream file(filename.c_str());
+    if(!fileExists(filename)) return; // XXX: Better error handling
+	ifstream file(filename.c_str());
     char *buffer = new char[256];
 
     for(;!file.eof();file.getline(buffer, 256))
@@ -154,35 +174,37 @@ inline void formatBars(const int capacity, battery_t &battery)
     // capacity (green = remaining), otherwise output yellow or red bars.
     // Output red bars only if total remaining capacity is less than warning
     // capacity.
-    for(int i = 0; i < BARS; i++)
+	int k = capacity;
+	cout << GREEN;
+	while(k--){ cout << BARSYMBOL; }
+
+    for(int i = capacity; i < BARS; i++)
     {
-		if(i < capacity)
-			cout << GREEN;
-		else if(battery.currentCapacity < battery.warningCapacity)
-			cout << RED;
+		if(battery.currentCapacity < battery.warningCapacity)
+			cout << RED << BARSYMBOL;
 		else
-			cout << YELLOW;
-        cout << BARSYMBOL;
+			cout << YELLOW << BARSYMBOL;
     }
-    cout << NOCOLOR;
+
+	cout << NOCOLOR;
 }
 
 int main(void)
 {
-    battery_t battery = {1, 1, 1}; // Prevent division by zero
+	battery_t battery = {1, 1, 1}; // Prevent division by zero
     // Check whether we are on AC power and print an upwards arrow to symbolize
     // AC current
 	// I assume that the file exists
-    if(acPower(AC))
-		cout << ACSYMBOL;
-    else
-		cout << BATTERYSYMBOL;
+	acPower(AC);
 
-    // Fill the battery struct (BAT1 for my laptop)
-    batteryCapacity(BAT1, battery);
-    currentCapacity(BAT1, battery);
+	// Fill the battery struct (BAT1 for my laptop)
+	batteryCapacity(BAT1_INFO, battery);
+	currentCapacity(BAT1_STATE, battery);
 
-    formatBars(green(battery), battery);
+	formatBars(green(battery), battery);
 
-    return 0;
+	//formatBars(BARS, battery);
+	//cout << FULLBAR << NOCOLOR;
+
+	return 0;
 }
